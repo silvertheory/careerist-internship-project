@@ -9,7 +9,7 @@ class LoginPage:
         # Updated locators based on the attributes provided
         self.username_locator = (By.XPATH, '//input[@id="email-2"]')
         self.password_locator = (By.XPATH, '//input[@id="field"]')
-        self.submit_locator = (By.XPATH, '//button[@id="login-button"]')
+        self.submit_locator = (By.CLASS_NAME, "login-button")
 
     def enter_username(self, username):
         username_field = WebDriverWait(self.driver, 10).until(
@@ -38,6 +38,9 @@ class LoginPage:
             self.driver.execute_script("arguments[0].click();", login_button)
 
     def login(self, username, password):
+        WebDriverWait(self.driver, 20).until(
+            EC.presence_of_element_located(self.username_locator)
+        )
         self.enter_username(username)
         self.enter_password(password)
         self.click_login_button()

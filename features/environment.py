@@ -1,10 +1,12 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from app.application import Application
 
-
-def before_scenario(context, scenario):
+def before_all(context):
+    # Initialize WebDriver
     context.driver = webdriver.Chrome()
+    context.driver.maximize_window()
+    context.app = Application(context.driver)  # Pass the driver to Application
 
-def after_scenario(context, scenario):
+def after_all(context):
+    # Quit the WebDriver
     context.driver.quit()

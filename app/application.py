@@ -3,9 +3,9 @@ from pages.secondary_deals_page import SecondaryDealsPage
 from pages.login_page import LoginPage
 
 class Application:
-    def __init__(self):
-        # Initialize the WebDriver
-        self.driver = webdriver.Chrome()
+    def __init__(self, driver):
+        # Use the provided WebDriver instance
+        self.driver = driver
         self.driver.maximize_window()
 
         # Page Objects

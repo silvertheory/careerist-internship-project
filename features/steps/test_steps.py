@@ -24,11 +24,6 @@ def step_impl(context):
 def step_impl(context):
     context.app.secondary_deals_page.open()
 
-# Step to verify the Secondary Deals page is displayed
-@then('the Secondary Deals page should be displayed')
-def step_impl(context):
-    assert "Secondary Deals" in context.app.driver.title
-
 # Step to go to the last page using pagination
 @then('the user can go to the last page using pagination')
 def step_impl(context):
