@@ -3,13 +3,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
-class LoginPage:
-    def __init__(self, driver):
-        self.driver = driver
-        # Updated locators based on the attributes provided
-        self.username_locator = (By.XPATH, '//input[@id="email-2"]')
-        self.password_locator = (By.XPATH, '//input[@id="field"]')
-        self.submit_locator = (By.CLASS_NAME, "login-button")
+from pages.base_page import BasePage
+
+
+class LoginPage(BasePage):
+    username_locator = (By.XPATH, '//input[@id="email-2"]')
+    password_locator = (By.XPATH, '//input[@id="field"]')
+    submit_locator = (By.CLASS_NAME, "login-button")
 
     def enter_username(self, username):
         username_field = WebDriverWait(self.driver, 10).until(

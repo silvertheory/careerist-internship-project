@@ -1,21 +1,11 @@
-from selenium import webdriver
-from pages.secondary_deals_page import SecondaryDealsPage
 from pages.login_page import LoginPage
+from pages.main_page import MainPage
+from pages.secondary_deals_page import SecondaryDealsPage
+
 
 class Application:
     def __init__(self, driver):
-        # Use the provided WebDriver instance
-        self.driver = driver
-        self.driver.maximize_window()
-
         # Page Objects
-        self.secondary_deals_page = SecondaryDealsPage(self.driver)
-        self.login_page = LoginPage(self.driver)
-
-    def open_main_page(self, url="https://soft.reelly.io"):
-        """Open the main page of the application."""
-        self.driver.get(url)
-
-    def quit(self):
-        """Close the browser and quit the WebDriver."""
-        self.driver.quit()
+        self.secondary_deals_page = SecondaryDealsPage(driver)
+        self.login_page = LoginPage(driver)
+        self.main_page = MainPage(driver)
