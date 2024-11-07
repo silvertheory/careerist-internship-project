@@ -1,18 +1,28 @@
-from pages.base_page import BasePage
 from selenium.webdriver.common.by import By
+from pages.base_page import BasePage
 
 class SecondaryDealsPage(BasePage):
-    def open(self):
-        """Navigate to the Secondary Deals page."""
-        secondary_deals_button = self.driver.find_element(By.XPATH, '//button[text()="Secondary Deals"]')
-        secondary_deals_button.click()
+    def navigate_to_secondary_deals(self):
+        self.click_element(By.XPATH, "//a[text()='Secondary']")
 
-    def go_to_last_page(self):
-        """Navigate to the last page using pagination."""
-        last_page_button = self.driver.find_element(By.XPATH, '//a[text()="Last"]')
-        last_page_button.click()
+    def is_secondary_deals_page_opened(self):
+        # Replace with the actual locator for confirmation
+        return self.find_element(By.XPATH, "//h1[text()='Secondary Deals']") is not None
 
-    def go_to_first_page(self):
-        """Navigate to the first page using pagination."""
-        first_page_button = self.driver.find_element(By.XPATH, '//a[text()="First"]')
-        first_page_button.click()
+    def go_to_final_page(self):
+        # Click until reaching the last page
+        while True:
+            next_button = self.find_element(By.XPATH, "//button[text()='Next']")
+            if next_button and next_button.is_enabled():
+                next_button.click()
+            else:
+                break  # Reached the final page
+
+    def go_back_to_first_page(self):
+        # Click until reaching the first page
+        while True:
+            previous_button = self.find_element(By.XPATH, "//button[text()='Previous']")
+            if previous_button and previous_button.is_enabled():
+                previous_button.click()
+            else:
+                break  # Reached the first page
