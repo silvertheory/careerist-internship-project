@@ -4,25 +4,23 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.wait import WebDriverWait
 from app.application import Application
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
+import allure
 
 # Credentials
 BROWSERSTACK_USERNAME = os.getenv("BROWSERSTACK_USERNAME", "davedriot_hkoi4e")
 BROWSERSTACK_ACCESS_KEY = os.getenv("BROWSERSTACK_ACCESS_KEY", "STmAojL8ob4aP1GR4uqR")
 
+
 def browser_init(context, browser="chrome"):
     """
     Initializes the WebDriver based on the browser type and environment.
-    :param context: Behave context
-    :param browser: Browser type ("chrome", "firefox", or "browserstack")
     """
     try:
         if browser == "chrome":
-            # Local Chrome setup
             chrome_options = ChromeOptions()
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
@@ -32,7 +30,6 @@ def browser_init(context, browser="chrome"):
             context.driver = webdriver.Chrome(service=service, options=chrome_options)
 
         elif browser == "firefox":
-            # Local Firefox setup
             firefox_options = FirefoxOptions()
             firefox_options.add_argument("--headless")
             firefox_options.add_argument("--no-sandbox")
@@ -43,7 +40,6 @@ def browser_init(context, browser="chrome"):
             context.driver = webdriver.Firefox(service=service, options=firefox_options)
 
         elif browser == "browserstack":
-            # BrowserStack setup
             capabilities = {
                 "bstack:options": {
                     "os": "OS X",
@@ -54,15 +50,8 @@ def browser_init(context, browser="chrome"):
                     "sessionName": os.getenv("SESSION_NAME", "BrowserStack Test")
                 }
             }
-
-            # BrowserStack URL
             browserstack_url = f"https://{BROWSERSTACK_USERNAME}:{BROWSERSTACK_ACCESS_KEY}@hub-cloud.browserstack.com/wd/hub"
-
-            # Initialize driver with options
-            context.driver = webdriver.Remote(
-                command_executor=browserstack_url,
-                desired_capabilities=capabilities
-            )
+            context.driver = webdriver.Remote(command_executor=browserstack_url, desired_capabilities=capabilities)
         else:
             raise ValueError(f"Browser '{browser}' is not supported. Use 'chrome', 'firefox', or 'browserstack'.")
 
@@ -74,27 +63,71 @@ def browser_init(context, browser="chrome"):
     except Exception as e:
         raise RuntimeError(f"Failed to initialize browser: {e}")
 
+
+def before_all(context):
+    """
+    Initialize environment before all tests.
+    Create environment.properties file for Allure.
+    """
+    print("Setting up Allure environment for reporting.")
+    os.makedirs("allure-results", exist_ok=True)  # Ensure directory exists
+    with open("allure-results/environment.properties", "w") as env_file:
+        env_file.write("Browser={}\n".format(os.getenv("BROWSER", "chrome")))
+        env_file.write("Platform=Cross-platform\n")
+        env_file.write("Build Name={}\n".format(os.getenv("BUILD_NAME", "Default Build")))
+
+
 def before_scenario(context, scenario):
+    """
+    Runs before each scenario to initialize the browser.
+    """
     print('\nStarted scenario: ', scenario.name)
     try:
-        # Set the browser from an environment variable
         browser = os.getenv("BROWSER", "chrome").lower()
         browser_init(context, browser)
     except Exception as e:
         print(f"Error during browser initialization: {e}")
         raise
 
+
 def before_step(context, step):
+    """
+    Logs the step details in the Allure report.
+    """
     print('\nStarted step: ', step)
+    allure.attach(
+        name="Step Description",
+        body=step.name,
+        attachment_type=allure.attachment_type.TEXT
+    )
+
 
 def after_step(context, step):
+    """
+    Logs failures and attaches screenshots on failure.
+    """
     if step.status == 'failed':
         print('\nStep failed: ', step)
+        if hasattr(context, "driver"):
+            try:
+                screenshot_path = f"screenshots/{step.name.replace(' ', '_')}.png"
+                context.driver.save_screenshot(screenshot_path)
+                allure.attach.file(
+                    screenshot_path,
+                    name="Screenshot on Failure",
+                    attachment_type=allure.attachment_type.PNG
+                )
+            except Exception as e:
+                print(f"Error capturing screenshot: {e}")
 
-def after_scenario(context, feature):
+
+def after_scenario(context, scenario):
+    """
+    Closes the browser after each scenario.
+    """
     if hasattr(context, "driver"):
         try:
             context.driver.quit()
-            print(f"Closed driver after scenario: {feature.name}")
+            print(f"Closed driver after scenario: {scenario.name}")
         except Exception as e:
             print(f"Error while quitting the driver: {e}")
