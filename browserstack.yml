@@ -1,8 +1,7 @@
 # =============================
 # Set BrowserStack Credentials
 # =============================
-# Add your BrowserStack userName and accessKey here or set BROWSERSTACK_USERNAME and
-# BROWSERSTACK_ACCESS_KEY as env variables
+# Add your BrowserStack userName and accessKey here or set them as environment variables
 userName: davedriot_HKoi4E
 accessKey: STmAojL8ob4aP1GR4uqR
 
@@ -10,23 +9,23 @@ accessKey: STmAojL8ob4aP1GR4uqR
 # BrowserStack Reporting
 # ======================
 # The following capabilities are used to set up reporting on BrowserStack:
-# Set 'projectName' to the name of your project. Example, Marketing Website
-projectName: BrowserStack Samples
-# Set `buildName` as the name of the job / testsuite being run
-buildName: browserstack build
-# `buildIdentifier` is a unique id to differentiate every execution that gets appended to
-# buildName. Choose your buildIdentifier format from the available expressions:
-# ${BUILD_NUMBER} (Default): Generates an incremental counter with every execution
-# ${DATE_TIME}: Generates a Timestamp with every execution. Eg. 05-Nov-19:30
-# Read more about buildIdentifiers here -> https://www.browserstack.com/docs/automate/selenium/organize-tests
-buildIdentifier: '#${BUILD_NUMBER}' # Supports strings along with either/both ${expression}
+# Set 'projectName' to the name of your project.
+projectName: Internship Project
+# Set 'buildName' as the name of the job/test suite being run.
+buildName: Internship Project Build
+# `buildIdentifier` is a unique ID to differentiate every execution.
+# Supports the following expressions:
+# ${BUILD_NUMBER}: Incremental counter with every execution (default).
+# ${DATE_TIME}: Timestamp with every execution. Eg. 18-Nov-20:40
+buildIdentifier: '#${DATE_TIME}'
 
 # =======================================
 # Platforms (Browsers / Devices to test)
 # =======================================
-# Platforms object contains all the browser / device combinations you want to test on.
+# List all browser/device combinations for the test.
 # Entire list available here -> (https://www.browserstack.com/list-of-browsers-and-platforms/automate)
 platforms:
+  # Desktop Browsers
   - os: OS X
     osVersion: Big Sur
     browserName: Chrome
@@ -35,27 +34,42 @@ platforms:
     osVersion: 10
     browserName: Edge
     browserVersion: latest
-  - deviceName: Samsung Galaxy S22 Ultra
-    browserName: chrome # Try 'samsung' for Samsung browser
+
+  # Mobile Devices
+  - platformName: Android
+    deviceName: Samsung Galaxy S22 Ultra
     osVersion: 12.0
+    browserName: chrome # For Samsung Browser, use 'samsung'
+  - platformName: iOS
+    deviceName: iPhone 12
+    osVersion: 14.0
+    browserName: safari
 
 # ==========================================
-# BrowserStack Local
+# BrowserStack Local Testing
 # (For localhost, staging/private websites)
 # ==========================================
-# Set browserStackLocal to true if your website under test is not accessible publicly over the internet
+# Set 'browserstackLocal' to true if your website under test is not accessible publicly over the internet.
 # Learn more about how BrowserStack Local works here -> https://www.browserstack.com/docs/automate/selenium/local-testing-introduction
 browserstackLocal: false # <boolean> (Default false)
+
 # browserStackLocalOptions:
-# Options to be passed to BrowserStack local in-case of advanced configurations
-  # localIdentifier: # <string> (Default: null) Needed if you need to run multiple instances of local.
-  # forceLocal: true  # <boolean> (Default: false) Set to true if you need to resolve all your traffic via BrowserStack Local tunnel.
-  # Entire list of arguments available here -> https://www.browserstack.com/docs/automate/selenium/manage-incoming-connections
+# Options for advanced BrowserStack Local configurations (if required):
+#   localIdentifier: "<identifier>"  # Set if running multiple instances of BrowserStack Local.
+#   forceLocal: true                 # Force all traffic through the local tunnel.
+#   Learn more: https://www.browserstack.com/docs/automate/selenium/manage-incoming-connections
 
 # ===================
-# Debugging features
+# Debugging Features
 # ===================
-debug: false # <boolean> # Set to true if you need screenshots for every selenium command ran
-networkLogs: false # <boolean> Set to true to enable HAR logs capturing
-consoleLogs: errors # <string> Remote browser's console debug levels to be printed (Default: errors)
-# Available options are `disable`, `errors`, `warnings`, `info`, `verbose` (Default: errors)
+# Enable debugging options for better analysis of tests.
+debug: true              # Enable screenshots for each Selenium/Appium command.
+networkLogs: true        # Capture network logs (HAR logs).
+consoleLogs: verbose     # Capture all console logs from the remote browser.
+# Options for consoleLogs: `disable`, `errors`, `warnings`, `info`, `verbose`.
+
+# ===================
+# Additional Settings
+# ===================
+# Disable video recording if unnecessary.
+video: true  # Set to false if you don't need videos for test runs.

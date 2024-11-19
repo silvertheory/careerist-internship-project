@@ -1,8 +1,8 @@
 import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support.wait import WebDriverWait
 from app.application import Application
@@ -11,85 +11,130 @@ from webdriver_manager.firefox import GeckoDriverManager
 import allure
 
 # BrowserStack Credentials
-BROWSERSTACK_USERNAME = os.getenv("BROWSERSTACK_USERNAME", "your_username")
-BROWSERSTACK_ACCESS_KEY = os.getenv("BROWSERSTACK_ACCESS_KEY", "your_access_key")
+BROWSERSTACK_USERNAME = os.getenv("BROWSERSTACK_USERNAME", "davedriot_hkoi4e")
+BROWSERSTACK_ACCESS_KEY = os.getenv("BROWSERSTACK_ACCESS_KEY", "STmAojL8ob4aP1GR4uqR")
 
 
-def browserstack_mobile_android(context):
+def browserstack_remote(context, options):
     """
-    Initialize WebDriver for Android testing on BrowserStack.
+    Initialize a BrowserStack Remote WebDriver session using `options`.
     """
-    capabilities = {
-        "bstack:options": {
-            "osVersion": "11.0",             # Android version
-            "deviceName": "Google Pixel 5",  # Device
-            "realMobile": "true",            # Use real devices
-            "buildName": os.getenv("BUILD_NAME", "BrowserStack Mobile Test"),
-            "sessionName": os.getenv("SESSION_NAME", "Mobile Android Test"),
-        },
-        "browserName": "Chrome",
-        "browserVersion": "latest",
-    }
     browserstack_url = f"https://{BROWSERSTACK_USERNAME}:{BROWSERSTACK_ACCESS_KEY}@hub-cloud.browserstack.com/wd/hub"
-    context.driver = webdriver.Remote(command_executor=browserstack_url, desired_capabilities=capabilities)
+    context.driver = webdriver.Remote(command_executor=browserstack_url, options=options)
 
 
-def browserstack_mobile_ios(context):
+def ios_capabilities(context, device_name="iPhone 14", os_version="16"):
     """
-    Initialize WebDriver for iOS testing on BrowserStack.
+    Define capabilities for iOS devices on BrowserStack.
     """
-    capabilities = {
-        "bstack:options": {
-            "osVersion": "14.0",            # iOS version
-            "deviceName": "iPhone 12",      # Device
-            "realMobile": "true",           # Use real devices
-            "buildName": os.getenv("BUILD_NAME", "BrowserStack Mobile Test"),
-            "sessionName": os.getenv("SESSION_NAME", "Mobile iOS Test"),
+    options = webdriver.ChromeOptions()
+    options.set_capability("platformName", "iOS")
+    options.set_capability("deviceName", device_name)
+    options.set_capability("os_version", os_version)
+    options.set_capability("browserName", "safari")
+    options.set_capability(
+        "bstack:options",
+        {
+            "projectName": "Internship Project",
+            "buildName": os.getenv("BUILD_NAME", "iOS Browser Tests"),
+            "sessionName": os.getenv("SESSION_NAME", f"iOS Test - {device_name} {os_version}"),
+            "debug": True,
+            "networkLogs": True,
         },
-        "browserName": "Safari",
-        "browserVersion": "latest",
-    }
-    browserstack_url = f"https://{BROWSERSTACK_USERNAME}:{BROWSERSTACK_ACCESS_KEY}@hub-cloud.browserstack.com/wd/hub"
-    context.driver = webdriver.Remote(command_executor=browserstack_url, desired_capabilities=capabilities)
+    )
+    browserstack_remote(context, options)
 
 
-def browser_init(context, browser="chrome", platform="desktop", mobile_device=None):
+def android_capabilities(context, device_name="Samsung Galaxy S22", os_version="12.0"):
     """
-    Initialize WebDriver based on the platform and browser type.
-    Supports:
-    - Desktop browsers (Chrome, Firefox)
-    - Mobile emulation (local Chrome)
-    - BrowserStack (Android and iOS)
+    Define capabilities for Android devices on BrowserStack.
+    """
+    options = webdriver.ChromeOptions()
+    options.set_capability("platformName", "Android")
+    options.set_capability("deviceName", device_name)
+    options.set_capability("os_version", os_version)
+    options.set_capability("browserName", "chrome")
+    options.set_capability(
+        "bstack:options",
+        {
+            "projectName": "Internship Project",
+            "buildName": os.getenv("BUILD_NAME", "Android Browser Tests"),
+            "sessionName": os.getenv("SESSION_NAME", f"Android Test - {device_name} {os_version}"),
+            "debug": True,
+            "networkLogs": True,
+        },
+    )
+    browserstack_remote(context, options)
+
+
+def browserstack_desktop_capabilities(context, browser="chrome", os="Windows", os_version="10"):
+    """
+    Define capabilities for desktop browsers on BrowserStack.
+    """
+    options = webdriver.ChromeOptions()
+    options.set_capability("browserName", browser)
+    options.set_capability("browserVersion", "latest")
+    options.set_capability(
+        "bstack:options",
+        {
+            "os": os,
+            "osVersion": os_version,
+            "projectName": "Internship Project",
+            "buildName": os.getenv("BUILD_NAME", "Desktop Browser Tests"),
+            "sessionName": os.getenv("SESSION_NAME", f"Desktop Test - {os} {os_version}"),
+            "debug": True,
+            "networkLogs": True,
+        },
+    )
+    browserstack_remote(context, options)
+
+
+def local_chrome(context, mobile_device=None):
+    """
+    Initialize local Chrome WebDriver.
+    """
+    chrome_options = ChromeOptions()
+    if mobile_device:
+        chrome_options.add_experimental_option("mobileEmulation", {"deviceName": mobile_device})
+    service = ChromeService(ChromeDriverManager().install())
+    context.driver = webdriver.Chrome(service=service, options=chrome_options)
+
+
+def local_firefox(context):
+    """
+    Initialize local Firefox WebDriver.
+    """
+    firefox_options = FirefoxOptions()
+    firefox_options.add_argument("--headless")
+    firefox_options.add_argument("--no-sandbox")
+    firefox_options.add_argument("--disable-dev-shm-usage")
+    service = FirefoxService(GeckoDriverManager().install())
+    context.driver = webdriver.Firefox(service=service, options=firefox_options)
+
+
+def browser_init(context, browser="chrome", platform="desktop"):
+    """
+    Initializes WebDriver based on the platform and browser type.
     """
     try:
-        if platform == "browserstack-android":
-            browserstack_mobile_android(context)
-
-        elif platform == "browserstack-ios":
-            browserstack_mobile_ios(context)
-
-        elif browser == "chrome":
-            chrome_options = ChromeOptions()
-
-            # Local mobile emulation
-            if mobile_device:
-                mobile_emulation = {"deviceName": mobile_device}
-                chrome_options.add_experimental_option("mobileEmulation", mobile_emulation)
-
-            service = ChromeService(ChromeDriverManager().install())
-            context.driver = webdriver.Chrome(service=service, options=chrome_options)
-
-        elif browser == "firefox":
-            firefox_options = FirefoxOptions()
-            service = FirefoxService(GeckoDriverManager().install())
-            context.driver = webdriver.Firefox(service=service, options=firefox_options)
-
+        if platform == "browserstack-ios":
+            ios_capabilities(context)
+        elif platform == "browserstack-android":
+            android_capabilities(context)
+        elif platform == "browserstack-desktop":
+            browserstack_desktop_capabilities(context)
+        elif platform == "local":
+            if browser == "chrome":
+                local_chrome(context)
+            elif browser == "firefox":
+                local_firefox(context)
+            else:
+                raise ValueError(f"Unsupported local browser '{browser}'.")
         else:
-            raise ValueError(f"Unsupported browser '{browser}'. Use 'chrome', 'firefox', or BrowserStack.")
+            raise ValueError(f"Unsupported platform '{platform}'.")
 
-        # Initialize Application and WebDriver waits
         context.driver.implicitly_wait(4)
-        context.driver.wait = WebDriverWait(context.driver, timeout=10)
+        context.driver.wait = WebDriverWait(context.driver, 10)
         context.app = Application(context.driver)
 
     except Exception as e:
@@ -98,7 +143,7 @@ def browser_init(context, browser="chrome", platform="desktop", mobile_device=No
 
 def before_all(context):
     """
-    Setup environment before running all tests.
+    Initialize environment before all tests.
     """
     print("Setting up Allure environment for reporting.")
     os.makedirs("allure-results", exist_ok=True)
@@ -110,57 +155,48 @@ def before_all(context):
 
 def before_scenario(context, scenario):
     """
-    Initialize browser before running each scenario.
+    Initialize the browser before each scenario.
     """
-    print(f'\nStarted scenario: {scenario.name}')
+    print(f"\nStarting scenario: {scenario.name}")
+    platform = os.getenv("PLATFORM", "local").lower()
+    browser = os.getenv("BROWSER", "chrome").lower()
     try:
-        browser = os.getenv("BROWSER", "chrome").lower()
-        platform = os.getenv("PLATFORM", "desktop").lower()
-        mobile_device = os.getenv("MOBILE_DEVICE")  # Optional for local mobile emulation
-        browser_init(context, browser, platform, mobile_device)
+        browser_init(context, browser, platform)
     except Exception as e:
-        print(f"Error initializing browser for scenario: {e}")
+        print(f"Error initializing browser: {e}")
         raise
 
 
 def before_step(context, step):
     """
-    Log step details in the Allure report.
+    Attach step details to Allure report.
     """
-    print(f'\nStarted step: {step.name}')
-    allure.attach(
-        name="Step Description",
-        body=step.name,
-        attachment_type=allure.attachment_type.TEXT
-    )
+    print(f"\nStarting step: {step.name}")
+    allure.attach(name="Step Details", body=step.name, attachment_type=allure.attachment_type.TEXT)
 
 
 def after_step(context, step):
     """
-    Handle step failures and attach screenshots.
+    Capture screenshots for failed steps.
     """
-    if step.status == 'failed':
-        print(f'\nStep failed: {step.name}')
-        if hasattr(context, "driver"):
-            try:
-                screenshot_path = f"screenshots/{step.name.replace(' ', '_')}.png"
-                context.driver.save_screenshot(screenshot_path)
-                allure.attach.file(
-                    screenshot_path,
-                    name="Screenshot on Failure",
-                    attachment_type=allure.attachment_type.PNG
-                )
-            except Exception as e:
-                print(f"Error capturing screenshot: {e}")
+    if step.status == "failed" and hasattr(context, "driver"):
+        screenshot_path = f"screenshots/{step.name.replace(' ', '_')}.png"
+        try:
+            context.driver.save_screenshot(screenshot_path)
+            allure.attach.file(screenshot_path, name="Failed Step Screenshot",
+                               attachment_type=allure.attachment_type.PNG)
+        except Exception as e:
+            print(f"Error capturing screenshot: {e}")
 
 
 def after_scenario(context, scenario):
     """
-    Cleanup after each scenario by quitting the browser.
+    Quit browser after each scenario.
     """
     if hasattr(context, "driver"):
         try:
             context.driver.quit()
-            print(f"Closed browser after scenario: {scenario.name}")
+            print(f"Closed browser for scenario: {scenario.name}")
         except Exception as e:
-            print(f"Error while quitting the browser: {e}")
+            print(f"Error closing browser: {e}")
+
